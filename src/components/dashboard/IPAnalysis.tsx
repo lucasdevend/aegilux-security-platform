@@ -113,7 +113,7 @@ type IPAnalysisProps = {
 
         if (!result.connection?.org)
             score += 10;
-        
+
         return Math.min(score, 100);
     }
 
@@ -127,6 +127,8 @@ type IPAnalysisProps = {
             );
 
             const result = await response.json();
+
+            console.log("IPWHOIS RESULT:", result);
 
             setData(result);
 
