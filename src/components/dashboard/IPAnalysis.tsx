@@ -9,15 +9,19 @@ type SearchHistoryItem = {
 };
 
 type IPData = {
-    query?: string;
+    ip?: string;
     country?: string;
     city?: string;
-    isp?: string;
-    org?: string;
-    as?: string;
-    lat?: number;
-    lon?: number;
-}
+
+    connection?: {
+        isp?: string;
+        org?: string;
+        asn?: number;
+    };
+
+    latitude?: number;
+    longitude?: number;
+};
 
 
 type IPAnalysisProps = {
@@ -79,8 +83,13 @@ type IPAnalysisProps = {
 
         let score = 0;
 
-        const isp = (result.isp || "").toLowerCase();
-        const org = (result.org || "").toLowerCase();
+        const isp =
+            (result.connection?.isp || "")
+                .toLowerCase();
+
+        const org =
+            (result.connection?.org || "")
+                .toLowerCase();
 
         if (
             isp.includes("hosting") ||
@@ -98,9 +107,13 @@ type IPAnalysisProps = {
         }
 
         if (!result.country) score += 20;
-        if (!result.as) score += 15;
-        if (!result.org) score += 10;
 
+        if (!result.connection?.asn)
+            score += 15;
+
+        if (!result.connection?.org)
+            score += 10;
+        
         return Math.min(score, 100);
     }
 
@@ -110,7 +123,7 @@ type IPAnalysisProps = {
             setLoading(true);
 
             const response = await fetch(
-                `http://ip-api.com/json/${targetIP}`
+                `https://ipwho.is/${targetIP}`
             );
 
             const result = await response.json();
@@ -124,9 +137,9 @@ type IPAnalysisProps = {
 
             setHistory((prev) => [
                 {
-                    ip: result.query,
+                    ip: result.ip,
                     country: result.country,
-                    isp: result.isp,
+                    isp: result.connection?.isp || "Unknown",
                 },
                 ...prev,
             ]);
@@ -261,7 +274,7 @@ type IPAnalysisProps = {
                     <div className="space-y-2 text-sm">
 
                         <p>
-                            <strong>IP:</strong> {data.query}
+                            <strong>IP:</strong> {data.ip}
                         </p>
 
                         <p>
@@ -273,23 +286,23 @@ type IPAnalysisProps = {
                         </p>
 
                         <p>
-                            <strong>ISP:</strong> {data.isp}
+                            <strong>ISP:</strong> {data.connection?.isp}
                         </p>
 
                         <p>
-                            <strong>Organization:</strong> {data.org}
+                            <strong>Organization:</strong> {data.connection?.org}
                         </p>
 
                         <p>
-                            <strong>ASN:</strong> {data.as}
+                            <strong>ASN:</strong> {data.connection?.asn}
                         </p>
 
                         <p>
-                            <strong>Latitude:</strong> {data.lat}
+                            <strong>Latitude:</strong> {data.latitude}
                         </p>
 
                         <p>
-                            <strong>Longitude:</strong> {data.lon}
+                            <strong>Longitude:</strong> {data.longitude}
                         </p>
                     </div>
 
@@ -328,9 +341,9 @@ type IPAnalysisProps = {
                                     "application/json",
                                 },
                                 body: JSON.stringify({
-                                    ip: data.query,
+                                    ip: data.ip,
                                     country: data.country,
-                                    isp: data.isp,
+                                    isp: data.connection?.isp,
                                     threatScore,
 
                                     sslIssuer:
